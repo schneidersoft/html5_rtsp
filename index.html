@@ -1,0 +1,116 @@
+
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <script src="free.js"></script>
+    <script src="libde265.js"></script>
+</head>
+<body>
+    <div>
+        <video id="demo_player" autoplay poster="/demo-poster.png" width="720px" height="420px"></video>
+    </div>
+    <button onclick="ui_pause()">PAUSE</button>
+    <button onclick="ui_play()">PLAY</button>
+    <button onclick="ui_play_and_skip_to_end()">PLAY+SKIP</button>
+    <button onclick="let ws = new WebSocket('ws://localhost:8555', 'chat');">WS</button>
+<div>
+Install gstreamer, the rtsp library and build the examples from the gstreamer rtsp library https://github.com/GStreamer/gst-rtsp-server.git<br />
+Then you can start a fake rtsp stream. Which you can show in this webpage.<br />
+./test-launch --port 8554 "( videotestsrc ! video/x-raw,width=640,height=360 ! clockoverlay ! openh264enc ! rtph264pay name=pay0 pt=96 )"<br />
+</div>
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(event) {
+        videoDelayProcessing();
+        playback();
+    });
+
+    function playback() {
+        const html5Player = document.getElementById('demo_player');
+        
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+
+        const source = 'rtsp://192.168.1.13/main';
+
+        var loc = window.location, socketuri;
+        console.log(loc);
+        if (loc.protocol === "file:") {
+            socketuri = "ws://localhost:8555";
+        } else if (loc.protocol === "http:") {
+            socketuri = "ws://" + loc.host + loc.pathname + "wsp/";
+        } else {
+            socketuri = "wss://" + loc.host + loc.pathname + "wsp/";
+        }
+
+        if (!source) {
+            return;
+        }
+
+        const playerOptions = {
+            socket: socketuri,
+
+            errorHandler: function(error){
+                if (error.code === 4002) {
+                    html5Player.src = "";
+                    html5Player.poster = "/poster.png";
+                }
+            },
+
+            videoFormatHandler: function (format) {
+                if (html5Player) {
+                    let event = new CustomEvent("videoFormat", {detail: format});
+                    window.parent.dispatchEvent(event)
+                }
+            },
+
+            trueSizeHandler: function(size) {
+                let event = new CustomEvent("trueSize", {detail: size});
+                window.parent.dispatchEvent(event)
+            },
+        };
+
+        html5Player.src = source;
+        Streamedian.player(html5Player, playerOptions);
+    }
+
+    function videoDelayProcessing() {
+        // Tab switching and window minimization processing 
+        // for browsers that use the chrome rendering engine.
+        if (!!window.chrome) {
+            document.addEventListener('visibilitychange', function() {
+                const html5Player = document.getElementById('demo_player');
+
+                console.log('visibilitychange -> ', document.visibilityState);
+                if (document.visibilityState === 'hidden') {
+                    html5Player.pause()
+                } else {
+                    html5Player.play();
+
+                    // Automatic jump to buffer end to watch live video when returning to the web page. 
+                    // Few seconds delay is required so the player would have time to update the timeline.
+                    setTimeout(function() { html5Player.currentTime = html5Player.buffered.end(0) }, 100);
+                }
+            });
+        }
+    }
+
+    function ui_pause() {
+        const html5Player = document.getElementById('demo_player');
+        html5Player.pause();
+    }
+
+    function ui_play() {
+        const html5Player = document.getElementById('demo_player');
+        html5Player.play();
+    }
+
+    function ui_play_and_skip_to_end() {
+        const html5Player = document.getElementById('demo_player');
+        html5Player.play();
+        // Automatic jump to buffer end
+        // Few seconds delay is required so the player would have time to update the timeline.
+        setTimeout(function() { html5Player.currentTime = html5Player.buffered.end(0) }, 100);
+    }
+</script>
