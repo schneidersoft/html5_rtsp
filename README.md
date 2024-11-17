@@ -1,6 +1,6 @@
 # html5_rtsp
 
-This project is a fork of streamedian with the caviat that it works right out of the box.
+This project is a fork of streamedian with the caveat that it works right out of the box.
 
 The project consists of two parts. A javascipt client library to display rtsp streams in the browser and a C backend that will serve rtsp streams over websockets.
 
@@ -59,4 +59,4 @@ alternatively gst-rtsp-server comes with the utility 'test-launch' that can crea
 
 ./test-launch --port 8888 "( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )"
 
-You will need to adjust the URL in index.html to rtsp://localhost:8888/
+You will need to adjust the URL in index.html to rtsp://<your rtsp server ip>:<and port>/test
