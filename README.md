@@ -59,4 +59,4 @@ alternatively gst-rtsp-server comes with the utility 'test-launch' that can crea
 
 ./test-launch --port 8888 "( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )"
 
-You will need to adjust the URL in index.html to rtsp://<your rtsp server ip>:<and port>/test
+You will need to adjust the URL in index.html to rtsp://your rtsp server ip:and port/test
